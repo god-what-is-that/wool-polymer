@@ -1,6 +1,6 @@
 # Wool & Concrete Stairs & Slabs Backport
 
-Server-side backport of Minecraft 26.3's wool stairs and slabs *and* concrete stairs and slabs (all 16 colors each, 64 blocks) to 26.2, built with [Polymer](https://polymer.pb4.eu) + Fabric. Players need **only a resource pack** (for the shapes) — no client mod. Names, drops, recipes, shears-mining (wool) and pickaxe-mining (concrete) all work server-side. Designed to vanish the moment 26.3 ships: the blocks use their native `minecraft:` ids, so world data is identical and native takes over with zero migration.
+Server-side backport of Minecraft 26.3's wool stairs and slabs _and_ concrete stairs and slabs (all 16 colors each, 64 blocks) to 26.2, built with [Polymer](https://polymer.pb4.eu) + Fabric. Players need **only a resource pack** (for the shapes) — no client mod. Names, drops, recipes, shears-mining (wool) and pickaxe-mining (concrete) all work server-side. Designed to vanish the moment 26.3 ships: the blocks use their native `minecraft:` ids, so world data is identical and native takes over with zero migration.
 
 ## Requirements
 
@@ -28,4 +28,4 @@ The blocks are real `minecraft:<color>_wool_stairs` / `_slab` and `minecraft:<co
 ## In Memory of Apollo
 
 This mod was created because we wanted to make a statue of our dog Apollo, who recently passed away.
-Our server runs some light mods but is 100% vanilla-client compatible so we couldn't use some of the other mods that backport wool stairs and slabs. Concrete stairs and slabs followed once Mojang added them in 26.3-snapshot-7.
+Our server runs some light mods but is 100% vanilla-client compatible so we couldn't use some of the other mods that backport wool stairs and slabs.
