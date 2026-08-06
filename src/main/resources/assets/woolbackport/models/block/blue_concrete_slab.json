@@ -1,0 +1,17 @@
+{
+  "parent": "minecraft:block/slab",
+  "display": {
+    "fixed": {
+      "scale": [
+        0.5,
+        0.5,
+        0.5
+      ]
+    }
+  },
+  "textures": {
+    "bottom": "minecraft:block/blue_concrete",
+    "top": "minecraft:block/blue_concrete",
+    "side": "minecraft:block/blue_concrete"
+  }
+}

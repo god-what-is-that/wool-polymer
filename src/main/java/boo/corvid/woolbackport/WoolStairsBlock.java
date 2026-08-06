@@ -23,32 +23,33 @@ import java.util.IdentityHashMap;
 import java.util.Map;
 
 /**
- * A real wool stair. The client sees an invisible, stair-shaped donor state matching this state's
- * orientation, so collision and targeting line up with the real block: you walk up smoothly and can
- * click/place on the whole stair, including the top step. An item-display entity carries the right
- * shape model (straight/inner/outer), rotated to match the vanilla blockstate, for the visible wool.
+ * A real wool/concrete stair. The client sees an invisible, stair-shaped donor state matching this
+ * state's orientation, so collision and targeting line up with the real block: you walk up smoothly
+ * and can click/place on the whole stair, including the top step. An item-display entity carries the
+ * right shape model (straight/inner/outer), rotated to match the vanilla blockstate.
  */
 public class WoolStairsBlock extends StairBlock
         implements PolymerTexturedBlock, BlockWithElementHolder, WoolBackport.DisplayProvider {
     private final Map<BlockState, BlockState> clientStates = new IdentityHashMap<>();
-    private final BlockState woolState;
+    private final BlockState sourceState;
     private final Identifier straightModel;
     private final Identifier innerModel;
     private final Identifier outerModel;
 
-    public WoolStairsBlock(BlockState baseState, Properties properties, String color) {
+    /** {@code base} is the id stem, e.g. "white_wool" or "white_concrete". */
+    public WoolStairsBlock(BlockState baseState, Properties properties, String base) {
         super(baseState, properties);
-        this.woolState = baseState; // the matching color's wool block; drives break particles + sound
-        this.straightModel = Identifier.fromNamespaceAndPath(WoolBackport.MOD_ID, color + "_wool_stairs");
-        this.innerModel = Identifier.fromNamespaceAndPath(WoolBackport.MOD_ID, color + "_wool_stairs_inner");
-        this.outerModel = Identifier.fromNamespaceAndPath(WoolBackport.MOD_ID, color + "_wool_stairs_outer");
+        this.sourceState = baseState; // the matching full block; drives break particles + sound
+        this.straightModel = Identifier.fromNamespaceAndPath(WoolBackport.MOD_ID, base + "_stairs");
+        this.innerModel = Identifier.fromNamespaceAndPath(WoolBackport.MOD_ID, base + "_stairs_inner");
+        this.outerModel = Identifier.fromNamespaceAndPath(WoolBackport.MOD_ID, base + "_stairs_outer");
 
         // Client donor is the matching invisible STAIR state (facing/half/shape/waterlogged): the
         // client's collision and outline are the true stair shape, so walking up is accurate and the
         // whole stair — including the top step — is clickable to break or place against. These donors
         // are invisible (requestEmpty), so unlike a visible textured block they don't draw from
         // Polymer's tiny donor pool; we can hand out the exact orientation for every state. A stair
-        // donor's full faces do cull neighbours, but the display entity renders the wool stair flush
+        // donor's full faces do cull neighbours, but the display entity renders the stair flush
         // over the cell, so there's no see-through void (that only happened in round 1, before the
         // display was covering it). The real stair shape stays authoritative server-side.
         for (BlockState state : getStateDefinition().getPossibleStates()) {
@@ -66,11 +67,11 @@ public class WoolStairsBlock extends StairBlock
     /**
      * The block-break effect (particles + sound, LevelEvent 2001) is derived by the client from
      * whatever state we send here. Default Polymer would send the stair donor -> generic (copper)
-     * sound; send the real wool block so the client plays block.wool.break with the right particles.
+     * sound; send the real source block so the client plays its break sound with right particles.
      */
     @Override
     public BlockState getPolymerBreakEventBlockState(BlockState state, @Nullable PacketContext context) {
-        return woolState;
+        return sourceState;
     }
 
     @Override

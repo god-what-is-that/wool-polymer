@@ -22,27 +22,28 @@ import java.util.IdentityHashMap;
 import java.util.Map;
 
 /**
- * A real wool slab. Double slabs are shown to the client as a plain full wool block (it already
- * exists in 26.2 and looks identical); single slabs are an invisible, shape-correct donor state on
- * the client plus an item-display entity carrying the slab model.
+ * A real wool/concrete slab. Double slabs are shown to the client as the plain full source block (it
+ * already exists in 26.2 and looks identical); single slabs are an invisible, shape-correct donor
+ * state on the client plus an item-display entity carrying the slab model.
  */
 public class WoolSlabBlock extends SlabBlock implements PolymerTexturedBlock, BlockWithElementHolder, WoolBackport.DisplayProvider {
     private final Map<BlockState, BlockState> clientStates = new IdentityHashMap<>();
-    private final BlockState woolState;
+    private final BlockState sourceState;
     private final Identifier bottomModel;
     private final Identifier topModel;
 
-    public WoolSlabBlock(Properties properties, Block woolBlock, String color) {
+    /** {@code base} is the id stem, e.g. "white_wool" or "white_concrete". */
+    public WoolSlabBlock(Properties properties, Block sourceBlock, String base) {
         super(properties);
-        this.bottomModel = Identifier.fromNamespaceAndPath(WoolBackport.MOD_ID, color + "_wool_slab");
-        this.topModel = Identifier.fromNamespaceAndPath(WoolBackport.MOD_ID, color + "_wool_slab_top");
+        this.bottomModel = Identifier.fromNamespaceAndPath(WoolBackport.MOD_ID, base + "_slab");
+        this.topModel = Identifier.fromNamespaceAndPath(WoolBackport.MOD_ID, base + "_slab_top");
 
-        BlockState wool = woolBlock.defaultBlockState();
-        this.woolState = wool; // drives break particles + sound (block.wool.break)
+        BlockState source = sourceBlock.defaultBlockState();
+        this.sourceState = source; // drives break particles + sound (e.g. block.wool.break)
         for (BlockState state : getStateDefinition().getPossibleStates()) {
             boolean wl = state.getValue(WATERLOGGED);
             BlockState client = switch (state.getValue(TYPE)) {
-                case DOUBLE -> wool; // full cube = a real vanilla wool block, no entity needed
+                case DOUBLE -> source; // full cube = a real vanilla block, no entity needed
                 case BOTTOM -> PolymerBlockResourceUtils.requestEmpty(BlockModelType.getSlab(true, wl));
                 case TOP -> PolymerBlockResourceUtils.requestEmpty(BlockModelType.getSlab(false, wl));
             };
@@ -55,17 +56,17 @@ public class WoolSlabBlock extends SlabBlock implements PolymerTexturedBlock, Bl
         return clientStates.get(state);
     }
 
-    /** Send the real wool block for the break effect so the client plays block.wool.break. */
+    /** Send the real source block for the break effect so the client plays its break sound. */
     @Override
     public BlockState getPolymerBreakEventBlockState(BlockState state, @Nullable PacketContext context) {
-        return woolState;
+        return sourceState;
     }
 
     @Override
     public @Nullable ItemStack displayStack(BlockState state) {
         SlabType type = state.getValue(TYPE);
         if (type == SlabType.DOUBLE) {
-            return null; // rendered as a real full wool block
+            return null; // rendered as a real full vanilla block
         }
         ItemStack stack = new ItemStack(WoolBackport.SLAB_DISPLAY);
         stack.set(DataComponents.ITEM_MODEL, type == SlabType.TOP ? topModel : bottomModel);

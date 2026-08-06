@@ -27,11 +27,14 @@ import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 /**
- * Backports 26.3's wool stairs and slabs (all 16 colors) to 26.2, server-side, via Polymer.
+ * Backports 26.3's wool and concrete stairs and slabs (all 16 colors each) to 26.2, server-side,
+ * via Polymer.
  *
  * Blocks are registered under their native {@code minecraft:} ids, so world data is identical to
  * 26.3 and native takes over with zero migration once the server updates. The mod refuses to load
@@ -47,11 +50,17 @@ public class WoolBackport implements ModInitializer {
     public static final String MOD_ID = "woolbackport";
     private static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
 
-    /** Vanilla dye colors, matching minecraft:&lt;color&gt;_wool ids. */
+    /** Vanilla dye colors, matching minecraft:&lt;color&gt;_wool / _concrete ids. */
     static final String[] COLORS = {
             "white", "orange", "magenta", "light_blue", "yellow", "lime", "pink", "gray",
             "light_gray", "cyan", "purple", "blue", "brown", "green", "red", "black",
     };
+
+    /**
+     * Block families backported here. Ids are {@code <color>_<material>_stairs} / {@code _slab},
+     * and the source block each one copies is {@code <color>_<material>}.
+     */
+    static final String[] MATERIALS = {"wool", "concrete"};
 
     /** Identity rotation, shared (setLeftRotation copies it). */
     static final Quaternionf NO_ROTATION = new Quaternionf();
@@ -66,9 +75,17 @@ public class WoolBackport implements ModInitializer {
 
     @Override
     public void onInitialize() {
-        // Forward-compat: if the blocks already exist natively (26.3+), do nothing.
-        if (BuiltInRegistries.BLOCK.containsKey(Identifier.withDefaultNamespace("white_wool_stairs"))) {
-            return;
+        // Forward-compat, per family: skip any material that already exists natively. Wool landed in
+        // 26.3-snapshot-2 and concrete in snapshot-7, so a dev build can have one and not the other.
+        List<String> pending = new ArrayList<>();
+        for (String material : MATERIALS) {
+            if (!BuiltInRegistries.BLOCK.containsKey(
+                    Identifier.withDefaultNamespace("white_" + material + "_stairs"))) {
+                pending.add(material);
+            }
+        }
+        if (pending.isEmpty()) {
+            return; // everything exists natively (26.3+); nothing to polyfill
         }
 
         PolymerResourcePackUtils.markAsRequired();
@@ -80,59 +97,68 @@ public class WoolBackport implements ModInitializer {
         SLAB_DISPLAY = registerDisplayItem("slab_display", Items.OAK_SLAB, true);
 
         Set<SoundType> donorSounds = new HashSet<>();
-        for (String color : COLORS) {
-            Block wool = BuiltInRegistries.BLOCK.getValue(Identifier.withDefaultNamespace(color + "_wool"));
-            // Inventory-item fallback is the matching WOOL block: a vanilla client predicts placement
-            // from the item it holds, reads that block's SoundType back, and plays it — so holding a
-            // wool item makes the placer hear block.wool.place (no resource pack, no sound-patcher).
-            // Pack-less clients then see a wool-block icon; the world block still falls back to a stair
-            // shape via STAIRS_DISPLAY/SLAB_DISPLAY.
-            Block stairs = new WoolStairsBlock(wool.defaultBlockState(), woolProps(wool, color + "_wool_stairs"), color);
-            Block slab = new WoolSlabBlock(woolProps(wool, color + "_wool_slab"), wool, color);
-            register(color + "_wool_stairs", stairs, wool.asItem());
-            register(color + "_wool_slab", slab, wool.asItem());
-            collectDonorSounds(stairs, donorSounds);
-            collectDonorSounds(slab, donorSounds);
+        for (String material : pending) {
+            for (String color : COLORS) {
+                String base = color + "_" + material;
+                Block source = BuiltInRegistries.BLOCK.getValue(Identifier.withDefaultNamespace(base));
+                // Inventory-item fallback is the matching FULL block: a vanilla client predicts
+                // placement from the item it holds, reads that block's SoundType back, and plays it —
+                // so holding a wool item makes the placer hear block.wool.place (no resource pack, no
+                // sound-patcher). Pack-less clients then see a full-block icon; the world block still
+                // falls back to a stair shape via STAIRS_DISPLAY/SLAB_DISPLAY.
+                Block stairs = new WoolStairsBlock(source.defaultBlockState(), props(source, base + "_stairs"), base);
+                Block slab = new WoolSlabBlock(props(source, base + "_slab"), source, base);
+                register(base + "_stairs", stairs, source.asItem());
+                register(base + "_slab", slab, source.asItem());
+                collectDonorSounds(stairs, donorSounds);
+                collectDonorSounds(slab, donorSounds);
+            }
         }
 
-        makeStepSoundsWool(donorSounds);
+        makeDonorStepSoundsServerAuthoritative(donorSounds);
     }
 
     /**
-     * Step / mining-hit / fall are predicted client-side from the invisible donor block (copper
-     * stairs → metallic), which no per-packet override can reach. polymer-sound-patcher silences the
-     * donor's predicted sounds (empty entries in the resource pack) and makes the server send our real
-     * wool sound instead. We convert only the DONOR sounds — wool itself is delivered natively — and
-     * only step/hit/fall (place/break already sound right). Blast radius: every block of the donor's
-     * material becomes server-authoritative for those three sounds (same sound, just server-driven).
+     * Step / mining-hit / fall are predicted client-side from the invisible donor block (waxed cut
+     * copper stairs → metallic, petrified oak slab → stone), which no per-packet override can reach.
+     * polymer-sound-patcher silences the donor's predicted sounds (empty entries in the resource pack)
+     * and makes the server send our real sound instead. Only step/hit/fall need this; place/break
+     * already sound right. Blast radius: every block of the donor's material becomes
+     * server-authoritative for those three sounds (same sound, just server-driven).
      */
-    private static void makeStepSoundsWool(Set<SoundType> donorSounds) {
-        donorSounds.remove(SoundType.WOOL); // our real sound (double-slab donor); delivered raw, nothing to silence
+    private static void makeDonorStepSoundsServerAuthoritative(Set<SoundType> donorSounds) {
         for (SoundType donor : donorSounds) {
             SoundPatcher.convertIntoServerSound(donor.getStepSound());
             SoundPatcher.convertIntoServerSound(donor.getHitSound());
             SoundPatcher.convertIntoServerSound(donor.getFallSound());
-            LOGGER.info("[{}] donor sound '{}' is now server-authoritative so wool blocks step/hit/fall like wool",
+            LOGGER.info("[{}] donor sound '{}' is now server-authoritative so our blocks step/hit/fall correctly",
                     MOD_ID, donor.getStepSound().location());
         }
     }
 
-    /** Adds the SoundTypes of a Polymer block's client donor states (what a vanilla client predicts). */
+    /**
+     * Adds the SoundTypes of a Polymer block's client donor states (what a vanilla client predicts).
+     *
+     * Skips donors that already sound like the real block — the client's prediction is correct there,
+     * so there is nothing to silence and no reason to widen the blast radius. This is per-state, not
+     * per-material: a concrete slab's donor (petrified oak slab) is already stone, while a WOOL slab's
+     * donor is that same stone donor and very much does need converting.
+     */
     private static void collectDonorSounds(Block block, Set<SoundType> out) {
         if (!(block instanceof PolymerTexturedBlock textured)) {
             return;
         }
         for (BlockState state : block.getStateDefinition().getPossibleStates()) {
             BlockState donor = textured.getPolymerBlockState(state, null);
-            if (donor != null) {
+            if (donor != null && donor.getSoundType() != state.getSoundType()) {
                 out.add(donor.getSoundType());
             }
         }
     }
 
-    private static BlockBehaviour.Properties woolProps(Block wool, String path) {
-        // ofFullCopy carries wool's sound, hardness, flammability and sound-dampening behaviour.
-        return BlockBehaviour.Properties.ofFullCopy(wool)
+    private static BlockBehaviour.Properties props(Block source, String path) {
+        // ofFullCopy carries the source block's sound, hardness and tool requirement.
+        return BlockBehaviour.Properties.ofFullCopy(source)
                 .setId(ResourceKey.create(Registries.BLOCK, Identifier.withDefaultNamespace(path)));
     }
 

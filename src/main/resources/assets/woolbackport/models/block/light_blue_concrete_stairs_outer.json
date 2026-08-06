@@ -1,0 +1,17 @@
+{
+  "parent": "minecraft:block/outer_stairs",
+  "display": {
+    "fixed": {
+      "scale": [
+        0.5,
+        0.5,
+        0.5
+      ]
+    }
+  },
+  "textures": {
+    "bottom": "minecraft:block/light_blue_concrete",
+    "top": "minecraft:block/light_blue_concrete",
+    "side": "minecraft:block/light_blue_concrete"
+  }
+}

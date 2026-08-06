@@ -1,0 +1,17 @@
+{
+  "parent": "minecraft:block/slab_top",
+  "display": {
+    "fixed": {
+      "scale": [
+        0.5,
+        0.5,
+        0.5
+      ]
+    }
+  },
+  "textures": {
+    "bottom": "minecraft:block/brown_concrete",
+    "top": "minecraft:block/brown_concrete",
+    "side": "minecraft:block/brown_concrete"
+  }
+}
