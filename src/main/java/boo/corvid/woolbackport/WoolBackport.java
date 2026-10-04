@@ -131,6 +131,7 @@ public class WoolBackport implements ModInitializer {
             SoundPatcher.convertIntoServerSound(donor.getStepSound());
             SoundPatcher.convertIntoServerSound(donor.getHitSound());
             SoundPatcher.convertIntoServerSound(donor.getFallSound());
+            SoundPatcher.convertIntoServerSound(donor.getBreakSound());
             LOGGER.info("[{}] donor sound '{}' is now server-authoritative so our blocks step/hit/fall correctly",
                     MOD_ID, donor.getStepSound().location());
         }
