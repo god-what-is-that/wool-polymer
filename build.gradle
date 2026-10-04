@@ -22,26 +22,23 @@ dependencies {
     // Fabric API is a standard server-side dependency; not bundled (admins install it).
     implementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
 
-    // Polymer modules — include() jar-in-jars them so server owners drop in ONE jar.
-    implementation include("eu.pb4:polymer-core:${project.polymer_version}")
-    implementation include("eu.pb4:polymer-blocks:${project.polymer_version}")
-    implementation include("eu.pb4:polymer-resource-pack:${project.polymer_version}")
-    implementation include("eu.pb4:polymer-virtual-entity:${project.polymer_version}")
-    // Bundled so the generated pack can auto-serve to joining players (enable in config). Not used
-    // by code; the mod also works with any other server-resource-pack delivery.
-    include("eu.pb4:polymer-autohost:${project.polymer_version}")
+    modImplementation "eu.pb4:polymer-autohost:${project.polymer_version}"
+    modImplementation "xyz.nucleoid:server-translations-api:${project.server_translations_api_version}"
+    modImplementation "eu.pb4:polymer-resource-pack-extras:${project.polymer_version}"
+    modImplementation "eu.pb4:polymer-core:${project.polymer_version}"
+    modImplementation "eu.pb4:polymer-blocks:${project.polymer_version}"
+    modImplementation "eu.pb4:polymer-resource-pack:${project.polymer_version}"
+    modImplementation "eu.pb4:polymer-virtual-entity:${project.polymer_version}"
+    modImplementation "eu.pb4:polymer-sound-patcher:${project.polymer_version}"
 
-    // Server Translations API: sends per-client fallback names for our block.minecraft.* keys, so
-    // vanilla clients see "White Wool Stairs" instead of the raw id. Data-driven (data/*/lang), no
-    // code. Bundled jar-in-jar. Pinned to 26.2; dropped alongside the polyfill at 26.3.
-    implementation include("xyz.nucleoid:server-translations-api:3.1.0+26.2")
-
-    // Sound patcher: step/mining-hit/fall are predicted client-side from the invisible copper-stairs
-    // donor (metallic). This module silences that prediction (via the pack) and makes the server send
-    // our real wool sound instead. Used from code (SoundPatcher). resource-pack-extras is its runtime
-    // dependency (bundle-only, like autohost).
-    implementation include("eu.pb4:polymer-sound-patcher:${project.polymer_version}")
-    include("eu.pb4:polymer-resource-pack-extras:${project.polymer_version}")
+    include "eu.pb4:polymer-autohost:${project.polymer_version}"
+    include "xyz.nucleoid:server-translations-api:${project.server_translations_api_version}"
+    include "eu.pb4:polymer-resource-pack-extras:${project.polymer_version}"
+    include "eu.pb4:polymer-core:${project.polymer_version}"
+    include "eu.pb4:polymer-blocks:${project.polymer_version}"
+    include "eu.pb4:polymer-resource-pack:${project.polymer_version}"
+    include "eu.pb4:polymer-virtual-entity:${project.polymer_version}"
+    include "eu.pb4:polymer-sound-patcher:${project.polymer_version}"
 }
 
 processResources {
