@@ -25,7 +25,14 @@ jobs:
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v6
-
+        
+      - name: Debug Java and Gradle
+        run: |
+          java -version
+          javac -version
+          ./gradlew --version
+          ./gradlew compileJava --info
+          
       - name: Build mod
         run: ./gradlew build
 
