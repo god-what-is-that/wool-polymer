@@ -2,8 +2,8 @@ plugins {
     // Unobfuscated Loom for MC 26.x: no remapping, so the old mod* configurations
     // (modImplementation/modApi) no longer exist — use plain implementation + include.
     // 1.15.+ is the line Polymer itself builds 26.2 with.
-    id 'net.fabricmc.fabric-loom' version '1.15.+'
-    id 'java'
+    id 'net.fabricmc.fabric-loom-remap' version '1.14.+'
+    id 'maven-publish'
 }
 
 base { archivesName = project.archives_base_name }
