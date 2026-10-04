@@ -16,6 +16,7 @@ repositories {
 
 dependencies {
     minecraft "com.mojang:minecraft:${project.minecraft_version}"
+    mappings loom.officialMojangMappings()
     // No mappings line — 26.x ships unobfuscated (official Mojang names only).
 
     implementation "net.fabricmc:fabric-loader:${project.loader_version}"
