@@ -17,22 +17,15 @@ jobs:
         with:
           ref: ${{ github.event.release.tag_name }}
 
-      - name: Set up Java 21
+      - name: Set up Java 25
         uses: actions/setup-java@v6
         with:
           distribution: temurin
-          java-version: '21'
+          java-version: '25'
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v6
         
-      - name: Debug Java and Gradle
-        run: |
-          java -version
-          javac -version
-          ./gradlew --version
-          ./gradlew compileJava --info
-          
       - name: Build mod
         run: ./gradlew build
 
