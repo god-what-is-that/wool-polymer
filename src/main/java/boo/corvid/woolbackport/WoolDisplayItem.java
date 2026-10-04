@@ -2,8 +2,7 @@ package boo.corvid.woolbackport;
 
 import eu.pb4.polymer.core.api.item.PolymerItem;
 import eu.pb4.polymer.resourcepack.api.PolymerResourcePackUtils;
-import net.fabricmc.fabric.api.networking.v1.context.PacketContext;
-import net.minecraft.core.HolderLookup;
+import xyz.nucleoid.packettweaker.PacketContext;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.Item;
@@ -46,7 +45,7 @@ public final class WoolDisplayItem extends Item implements PolymerItem {
     }
 
     @Override
-    public @Nullable Identifier getPolymerItemModel(ItemStack stack, PacketContext context, HolderLookup.Provider lookup) {
+    public @Nullable Identifier getPolymerItemModel(ItemStack stack, PacketContext context) {
         return PolymerResourcePackUtils.hasMainPack(context) ? stack.get(DataComponents.ITEM_MODEL) : null;
     }
 }
